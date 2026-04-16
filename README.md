@@ -169,54 +169,6 @@ curl -X DELETE "http://localhost:8000/api/profiles/<id>"
 
 ---
 
-## Deployment (Vercel + Neon)
-
-Vercel serverless functions don't persist a local filesystem, so SQLite only works locally. Use **Neon** (free hosted PostgreSQL) for the live database.
-
-### Step 1 — Create a free Neon database
-
-1. Go to [neon.tech](https://neon.tech) and sign up (free)
-2. Create a new project — pick any region
-3. From the dashboard, copy the **Connection string** — it looks like:
-   ```
-   postgresql://user:password@host.neon.tech/dbname?sslmode=require
-   ```
-
-### Step 2 — Push to GitHub
-
-Make sure your repo is **public**:
-```bash
-git init
-git add .
-git commit -m "initial commit"
-git remote add origin https://github.com/<your-username>/profiles-api.git
-git push -u origin main
-```
-
-### Step 3 — Deploy on Vercel
-
-1. Go to [vercel.com](https://vercel.com) → **Add New → Project**
-2. Import your GitHub repository
-3. Before clicking Deploy, go to **Environment Variables** and add:
-   ```
-   DATABASE_URL = postgresql://user:password@host.neon.tech/dbname?sslmode=require
-   ```
-4. Click **Deploy**
-
-Your live URL will be:
-```
-https://<your-project-name>.vercel.app
-```
-
-### Step 4 — Verify
-
-```bash
-curl -X POST "https://<your-project-name>.vercel.app/api/profiles" \
-  -H "Content-Type: application/json" \
-  -d '{"name": "ella"}'
-```
-
----
 
 ## CORS
 
