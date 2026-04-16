@@ -4,10 +4,14 @@ from datetime import datetime, timezone
 import uuid
 import time
 import random
+def generate_uuid7():
+    timestamp_ms = int(time.time() * 1000)
+    uuid_int = (timestamp_ms << 80) | (random.getrandbits(80) & ((1 << 80) - 1))
+    return str(uuid.UUID(int=uuid_int))
 
 class Profile(Base):
     __tablename__ = "profiles"
-    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid7()))
+    id = Column(String(36), primary_key=True, default=generate_uuid7())
     name = Column(String(100), unique=True, index=True, nullable=False)
     gender = Column(String(10), nullable=False)
     gender_probability = Column(Float, nullable=False)

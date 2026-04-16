@@ -25,7 +25,7 @@ app.add_middleware(
 )
 
 
-@app.post("/api/profile")
+@app.post("/api/profile", status_code=201)
 async def create_profile(profile: ProfileCreate, db: Session = Depends(get_db)):
 
     if not profile.name or profile.name.strip() == "":
@@ -152,7 +152,7 @@ async def create_profile(profile: ProfileCreate, db: Session = Depends(get_db)):
         )
 
 
-@app.get("/api/profiles")
+@app.get("/api/profiles", status_code=200)
 def list_profiles(
     gender: Optional[str],
     country_id: Optional[str],
@@ -184,7 +184,7 @@ def list_profiles(
     }
 
 
-@app.get("/api/profiles/{profile_id}")
+@app.get("/api/profiles/{profile_id}", status_code=200)
 def get_profile(profile_id: str, db: Session = Depends(get_db)):
     profile = db.query(Profile).filter(Profile.id == profile_id).first()
 
@@ -209,7 +209,7 @@ def get_profile(profile_id: str, db: Session = Depends(get_db)):
     }
 
 
-@app.delete("/api/profiles/{profile_id}")
+@app.delete("/api/profiles/{profile_id}", status_code=204)
 def delete_profile(profile_id: str, db: Session = Depends(get_db)):
     profile = db.query(Profile).filter(Profile.id == profile_id).first()
 
@@ -220,4 +220,4 @@ def delete_profile(profile_id: str, db: Session = Depends(get_db)):
     db.delete(profile)
     db.commit()
 
-    return JSONResponse(status_code=204, content=None)
+    return 
