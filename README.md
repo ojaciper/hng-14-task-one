@@ -11,7 +11,6 @@ profiles-api/
 ├── api/
 │   └── index.py       # FastAPI app (Vercel entrypoint)
 ├── requirements.txt
-├── vercel.json
 └── README.md
 ```
 
