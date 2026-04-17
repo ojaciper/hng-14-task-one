@@ -173,7 +173,7 @@ def list_profiles(
 ):
     query = db.query(Profile)
     if gender:
-       query= query.filter(func.lower(Profile.gender) == "male")
+       query= query.filter(func.lower(Profile.gender) == gender.lower())
     if country_id:
        query= query.filter(func.lower(Profile.country_id) == country_id.lower())
     if age_group:
