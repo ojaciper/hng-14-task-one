@@ -31,7 +31,7 @@ app.add_middleware(
 )
 
 
-@app.post("/api/profile", status_code=201)
+@app.post("/api/profiles", status_code=201)
 async def create_profile(profile: ProfileCreate, db: Session = Depends(get_db)):
 
     if not profile.name or profile.name.strip() == "":
@@ -48,8 +48,6 @@ async def create_profile(profile: ProfileCreate, db: Session = Depends(get_db)):
     normalized_name = profile.name.strip().lower()
 
     existing_profile = db.query(Profile).filter(Profile.name == normalized_name).first()
-    print(existing_profile)
-
     if existing_profile:
         return {
             "status": "success",
@@ -82,6 +80,7 @@ async def create_profile(profile: ProfileCreate, db: Session = Depends(get_db)):
             g_response = client.get(
                 "https://api.genderize.io", params={"name": normalized_name}
             )
+           
             g_data = g_response.json()
 
             # Agify
@@ -240,3 +239,6 @@ def delete_profile(profile_id: str, db: Session = Depends(get_db)):
 
     return JSONResponse(status_code=204, content=None)
 
+@app.get("/")
+def root():
+    return {"message": "Name Profiler API", "version": "1.0.0"}
