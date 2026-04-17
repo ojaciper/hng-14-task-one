@@ -3,19 +3,14 @@ from typing import Optional
 from fastapi import FastAPI, Depends
 from fastapi.responses import JSONResponse
 import httpx
-from sqlalchemy import select
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 from fastapi.middleware.cors import CORSMiddleware
-from helper.helper import (
-    call_agify,
-    call_genderize,
-    call_nationalize,
-    determin_age_group,
-)
+from helper.helper import determin_age_group
 from schama.profile import ProfileCreate
 from database.database import get_db, engine, Base
 from database.model import Profile, generate_uuid7
-import asyncio
+
 
 Base.metadata.create_all(bind=engine)
 
@@ -80,7 +75,7 @@ async def create_profile(profile: ProfileCreate, db: Session = Depends(get_db)):
             g_response = client.get(
                 "https://api.genderize.io", params={"name": normalized_name}
             )
-           
+
             g_data = g_response.json()
 
             # Agify
@@ -171,18 +166,18 @@ async def create_profile(profile: ProfileCreate, db: Session = Depends(get_db)):
 
 @app.get("/api/profiles", status_code=200)
 def list_profiles(
-    gender: Optional[str]=None,
-    country_id: Optional[str]=None,
-    age_group: Optional[str]=None,
+    gender: Optional[str] = None,
+    country_id: Optional[str] = None,
+    age_group: Optional[str] = None,
     db: Session = Depends(get_db),
 ):
     query = db.query(Profile)
     if gender:
-        query.filter(Profile.gender == gender.lower())
+       query= query.filter(func.lower(Profile.gender) == "male")
     if country_id:
-        query.filter(Profile.country_id == country_id.lower())
+       query= query.filter(func.lower(Profile.country_id) == country_id.lower())
     if age_group:
-        query.filter(Profile.age_group == age_group.lower())
+        query=query.filter(func.lower(Profile.age_group) == age_group.lower())
     profiles = query.order_by(Profile.created_at.desc()).all()
 
     return {
@@ -238,7 +233,8 @@ def delete_profile(profile_id: str, db: Session = Depends(get_db)):
     db.delete(profile)
     db.commit()
 
-    return 
+    return
+
 
 @app.get("/")
 def root():
