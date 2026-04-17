@@ -10,7 +10,7 @@
     {
       "src": "/api/profiles",
       "methods": ["POST", "GET", "OPTIONS"],
-      "dest": "/api/index.py",
+      "dest": "/api/main.py",
       "headers": {
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
@@ -20,7 +20,7 @@
     {
       "src": "/api/profiles/(.*)",
       "methods": ["GET", "DELETE", "OPTIONS"],
-      "dest": "/api/index.py",
+      "dest": "/api/main.py",
       "headers": {
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Methods": "GET, DELETE, OPTIONS",
