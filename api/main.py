@@ -6,7 +6,12 @@ import httpx
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 from fastapi.middleware.cors import CORSMiddleware
-from helper.helper import call_agify, call_genderize, call_nationalize
+from helper.helper import (
+    call_agify,
+    call_genderize,
+    call_nationalize,
+    determin_age_group,
+)
 from schama.profile import ProfileCreate
 from database.database import get_db, engine, Base
 from database.model import Profile, generate_uuid7
@@ -64,24 +69,72 @@ async def create_profile(profile: ProfileCreate, db: Session = Depends(get_db)):
             },
         }
     try:
-        gender_task = call_genderize(normalized_name)
-        age_task = call_agify(normalized_name)
-        country_task = call_nationalize(normalized_name)
+        # gender_task = call_genderize(normalized_name)
+        # age_task = call_agify(normalized_name)
+        # country_task = call_nationalize(normalized_name)
 
-        gender_data, age_data, country_data = await asyncio.gather(
-            gender_task, age_task, country_task
-        ) 
-        profile_id = generate_uuid7()       
+        # gender_data, age_data, country_data = await asyncio.gather(
+        #     gender_task, age_task, country_task
+        # )
+        with httpx.Client(timeout=10.0) as client:
+            # Gendarize
+            g_response = client.get(
+                "https://api.genderize.io", params={"name": normalized_name}
+            )
+            g_data = g_response.json()
+
+            # Agify
+            a_response = client.get(
+                "https://api.agify.io", params={"name": normalized_name}
+            )
+            a_data = a_response.json()
+
+            # Nationalize
+            n_response = client.get(
+                "https://api.nationalize.io", params={"name": normalized_name}
+            )
+            n_data = n_response.json()
+            # Validate responses
+        if g_data.get("gender") is None or g_data.get("count") == 0:
+            return JSONResponse(
+                status_code=502,
+                content={
+                    "status": "502",
+                    "message": "Genderize returned an invalid response",
+                },
+            )
+        if a_data.get("age") is None:
+            return JSONResponse(
+                status_code=502,
+                content={
+                    "status": "502",
+                    "message": "Agify returned an invalid response",
+                },
+            )
+
+        if not n_data.get("country") or len(n_data["country"]) == 0:
+            return JSONResponse(
+                status_code=502,
+                content={
+                    "status": "502",
+                    "message": "Nationalize returned an invalid response",
+                },
+            )
+
+        # Get top country
+        top_country = max(n_data["country"], key=lambda x: x["probability"])
+
+        profile_id = generate_uuid7()
         new_profile = Profile(
             id=profile_id,
             name=normalized_name,
-            gender=gender_data["gender"],
-            gender_probability=gender_data["gender_probability"],
-            sample_size=gender_data["sample_size"],
-            age=age_data["age"],
-            age_group=age_data["age_group"],
-            country_id=country_data["country_id"],
-            country_probability=country_data["country_probability"],
+            gender=g_data["gender"],
+            gender_probability=g_data["probability"],
+            sample_size=g_data["count"],
+            age=a_data["age"],
+            age_group=determin_age_group(a_data["age"]),
+            country_id=top_country["country_id"],
+            country_probability=top_country["probability"],
             created_at=datetime.now(timezone.utc),
         )
         db.add(new_profile)
@@ -104,48 +157,10 @@ async def create_profile(profile: ProfileCreate, db: Session = Depends(get_db)):
             },
         }
 
-    except ValueError as e:
-        error_msg = str(e)
-        if "Genderize" in error_msg:
-            return JSONResponse(
-                status_code=502,
-                content={
-                    "status": "502",
-                    "message": "Genderize returned an invalid response",
-                },
-            )
-        elif "Agify" in error_msg:
-            return JSONResponse(
-                status_code=502,
-                content={
-                    "status": "502",
-                    "message": "Agify returned an invalid response",
-                },
-            )
-        elif "Nationalize" in error_msg:
-            return JSONResponse(
-                status_code=502,
-                content={
-                    "status": "502",
-                    "message": "Nationalize returned an invalid response",
-                },
-            )
-        else:
-            return JSONResponse(
-                status_code=502, content={"status": "error", "message": error_msg}
-            )
     except httpx.TimeoutException:
         return JSONResponse(
             status_code=504,
             content={"status": "error", "message": "External API timeout"},
-        )
-    except httpx.HTTPStatusError as e:
-        return JSONResponse(
-            status_code=502,
-            content={
-                "status": "error",
-                "message": f"External API error: {e.response.status_code}",
-            },
         )
     except Exception as e:
         return JSONResponse(
@@ -222,4 +237,5 @@ def delete_profile(profile_id: str, db: Session = Depends(get_db)):
     db.delete(profile)
     db.commit()
 
-    return 
+    return JSONResponse(status_code=204, content=None)
+
