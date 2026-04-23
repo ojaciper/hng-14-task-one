@@ -11,6 +11,7 @@ from schama.profile import ProfileCreate
 from database.database import get_db, engine, Base
 from database.model import Profile, generate_uuid7
 from utils.natural_lang import NaturalLanguageParser
+from helper.validate_query import validate_query_parameters
 
 
 Base.metadata.create_all(bind=engine)
@@ -176,10 +177,30 @@ def list_profiles(
     ),
     order: Optional[str] = Query("desc", regex="^(asc|desc)$"),
     page: int = Query(1, ge=1),
-    limit: int = Query(10, ge=1, le=100),
+    limit: int = Query(10, ge=1, le=50),
     db: Session = Depends(get_db),
 ):
-    query = db.query(Profile)
+    #validate query parameters
+    is_valide,error_message =validate_query_parameters(
+        gender=gender,
+        age_group=age_group,
+        country_id=country_id,
+        min_age=min_age,
+        max_age=max_age,
+        min_gender_probability=min_gender_probability,
+        min_country_probability=min_country_probability,
+        sort_by=sort_by,
+        order=order
+    )
+    
+    if not is_valide:
+        return JSONResponse(
+            status_code=422,
+            content={"status": "error", "message": error_message}
+        )
+    
+    query = db.query(Profile)   
+    
     if gender:
         query = query.filter(func.lower(Profile.gender) == gender.lower())
     if country_id:
@@ -215,6 +236,9 @@ def list_profiles(
     return {
         "status": "success",
         "count": len(profiles),
+        "page": page,
+        "limit": limit,
+        "total": total,
         "data": [
             {
                 "id": profile.id,

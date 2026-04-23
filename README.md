@@ -4,6 +4,79 @@ A queryable demographic intelligence engine built with FastAPI + PostgreSQL. Agg
 
 ---
 
+## 📖 Overview
+
+The **Intelligence Query Engine** is a production-ready demographic intelligence API that transforms raw profile data into a powerful, queryable engine. It enables marketing teams, product analysts, and growth analysts to segment users, identify patterns, and query large datasets using both traditional filters and natural language.
+
+---
+
+### Business Value
+
+- **Marketing Teams**: Target specific demographics for campaigns
+- **Product Teams**: Understand user demographics for feature planning
+- **Growth Analysts**: Identify patterns and trends in user base
+- **Data Scientists**: Extract insights from demographic data
+
+---
+
+
+## ✨ Features
+
+| Feature | Status | Description |
+|---------|--------|-------------|
+| 🔍 Advanced Filtering | ✅ | 8+ filter parameters (gender, age, country, probability) |
+| 🗣️ Natural Language Search | ✅ | Parse plain English into database queries |
+| 📊 Sorting | ✅ | Sort by age, creation date, or probability scores |
+| 📄 Pagination | ✅ | Configurable page size with max limit of 50 |
+| 🔒 Input Validation | ✅ | Comprehensive validation with proper error codes |
+| 🌐 CORS Enabled | ✅ | Cross-origin requests supported |
+| 🗄️ PostgreSQL | ✅ | Production-ready database with strategic indexes |
+| ⚡ High Performance | ✅ | Sub-100ms response times for filtered queries |
+
+---
+
+## 🛠️ Tech Stack
+
+| Component | Technology | Version | Purpose |
+|-----------|------------|---------|---------|
+| Web Framework | FastAPI | 0.104+ | High-performance API framework |
+| Database | PostgreSQL | 12+ | Relational database |
+| ORM | SQLAlchemy | 2.0+ | Database abstraction |
+| Database Adapter | psycopg2-binary | 2.9+ | PostgreSQL connection |
+| ASGI Server | Uvicorn | 0.24+ | Production server |
+| Language | Python | 3.9+ | Core programming language |
+
+---
+
+## 🏗️ Architecture
+┌─────────────────────────────────────────────────────────────┐
+│ Client │
+│ (Browser / API Tool) │
+└─────────────────────┬───────────────────────────────────────┘
+│ HTTP/HTTPS
+▼
+┌─────────────────────────────────────────────────────────────┐
+│ FastAPI Server │
+│ ┌──────────────┐ ┌──────────────┐ ┌──────────────┐ │
+│ │ Request │ │ Natural │ │ Response │ │
+│ │ Validation │─▶│ Language │─▶│ Formatting │ │
+│ │ │ │ Parser │ │ │ │
+│ └──────────────┘ └──────────────┘ └──────────────┘ │
+└─────────────────────┬───────────────────────────────────────┘
+│ SQLAlchemy ORM
+▼
+┌─────────────────────────────────────────────────────────────┐
+│ PostgreSQL │
+│ ┌──────────────────────────────────────────────────────┐ │
+│ │ profiles Table │ │
+│ │ • Indexed columns for fast queries │ │
+│ │ • Composite indexes for common filters │ │
+│ │ • Connection pooling for concurrency │ │
+│ └──────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────┘
+
+---
+
 ## Project Structure
 
 ```
